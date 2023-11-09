@@ -147,6 +147,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_screen_lock:
+    dependency: "direct main"
+    description:
+      name: flutter_screen_lock
+      sha256: "1d86191e67f8c2f09349c2d2929b6d019db213f012d577ad3b85935d22b13207"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.0.1"
   flutter_spinkit:
     dependency: "direct main"
     description:
@@ -237,14 +245,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0-pre"
-  passcode_screen:
-    dependency: "direct main"
-    description:
-      name: passcode_screen
-      sha256: "66f162b0c6fa0b922597b600f66a0b0f8350b2b3aa7c09301c41e11713170317"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.1"
   path:
     dependency: transitive
     description:
