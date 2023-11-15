@@ -43,3 +43,10 @@ flutter:
     - family: OradanoGSRR
       fonts:
         - asset: assets/fonts/OradanoGSRR.ttf
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: 'assets/images/icon.png'
+  adaptive_icon_background: '#0e100f'
+  adaptive_icon_foreground: 'assets/images/icon_adaptive_foreground.png'

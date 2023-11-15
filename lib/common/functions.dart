@@ -1,4 +1,3 @@
-
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -99,7 +98,7 @@ String rndText(int length) {
   final rnd = Random();
   final codeUnits = List.generate(
     length,
-        (index) {
+    (index) {
       final n = rnd.nextInt(tmpLength);
       return tmp.codeUnitAt(n);
     },
