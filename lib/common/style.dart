@@ -50,3 +50,48 @@ const kBgDecoration = BoxDecoration(
     opacity: 0.8,
   ),
 );
+
+const kHomeGridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
+  crossAxisSpacing: 4,
+  mainAxisSpacing: 4,
+  crossAxisCount: 3,
+);
+
+const List<String> imageExtensions = [
+  '.HEIC',
+  '.heic',
+  '.JPEG',
+  '.jpeg',
+  '.JPG',
+  '.jpg',
+  '.GIF',
+  '.gif',
+  '.PNG',
+  '.png',
+];
+const List<String> videoExtensions = [
+  '.MP4',
+  '.mp4',
+  '.MOV',
+  '.mov',
+  '.WMV',
+  '.wmv',
+  '.AVI',
+  '.avi',
+];
+const List<String> audioExtensions = [
+  '.MP3',
+  '.mp3',
+  '.WMA',
+  '.wma',
+  '.ASF',
+  '.asf',
+  '.3GP',
+  '.3gp',
+  '.3G2',
+  '.3g2',
+  '.AAC',
+  '.aac',
+  '.WAV',
+  '.wav',
+];

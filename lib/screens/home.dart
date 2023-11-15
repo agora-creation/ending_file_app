@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:ending_file_app/common/functions.dart';
 import 'package:ending_file_app/common/style.dart';
 import 'package:ending_file_app/screens/delete_setting.dart';
+import 'package:ending_file_app/services/sqflite.dart';
 import 'package:ending_file_app/widgets/custom_sm_button.dart';
 import 'package:ending_file_app/widgets/custom_text_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screen_lock/flutter_screen_lock.dart';
+import 'package:path/path.dart' as p;
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +19,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  List<Map<String, dynamic>> files = [];
+
   Future _init() async {
     String? passcode = await getPrefsString('passcode');
     if (passcode != null) {
@@ -21,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await screenLock(
         context: context,
         correctString: passcode,
-        title: const Text('パスコードを入力してください'),
+        title: const Text('画面がロックされました\nパスコードを入力してください'),
         canCancel: false,
         onUnlocked: () {
           Navigator.pop(context);
@@ -56,8 +63,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('画面ロック設定がされていません。'),
-              const Text('画面ロックに必要なパスコートを設定してください。'),
+              const Text('画面ロックの設定がされていません。'),
+              const Text('画面ロックするためのパスコードを設定してください。'),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -84,8 +91,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future _changePasscode() async {
     await screenLockCreate(
       context: context,
-      title: const Text('パスコードを入力してください'),
-      confirmTitle: const Text('同じパスコードを再入力してください'),
+      title: const Text('パスコードを再設定します\nパスコードを入力してください'),
+      confirmTitle: const Text('パスコードを再設定します\n先ほど入力したパスコードを再入力してください'),
       canCancel: false,
       onConfirmed: (value) async {
         await setPrefsString('passcode', value);
@@ -119,11 +126,38 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
+  Future _getFiles() async {
+    List<Map<String, dynamic>> tmpFiles = await SqfLiteService.getFolder();
+    setState(() {
+      files = tmpFiles;
+    });
+  }
+
+  Future _uploadFiles() async {
+    PermissionState ps = await AssetPicker.permissionCheck();
+    if (!ps.hasAccess) return;
+    if (!mounted) return;
+    List<AssetEntity>? result = await AssetPicker.pickAssets(context);
+    if (result == null) return;
+    if (result.isEmpty) return;
+    List<String> ids = [];
+    for (AssetEntity entity in result) {
+      File? file = await entity.originFile;
+      if (file != null) {
+        await SqfLiteService.savedFile(file);
+        _getFiles();
+      }
+      ids.add(entity.id);
+    }
+    await PhotoManager.editor.deleteWithIds(ids);
+  }
+
   @override
   void initState() {
-    super.initState();
     _init();
+    super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _getFiles();
   }
 
   @override
@@ -168,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     onPressed: () async {
                       await _changePasscode();
                     },
-                    label: '画面ロック設定',
+                    label: 'パスコード再設定',
                   ),
                   CustomTextButton(
                     onPressed: () => showBottomUpScreen(
@@ -180,26 +214,32 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ],
               ),
               Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisSpacing: 4,
-                    mainAxisSpacing: 4,
-                    crossAxisCount: 3,
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  itemCount: 50,
-                  itemBuilder: (context, index) {
-                    return const Card(
-                      child: Text('写真'),
-                    );
-                  },
-                ),
+                child: files.isNotEmpty
+                    ? GridView.builder(
+                        gridDelegate: kHomeGridDelegate,
+                        padding: const EdgeInsets.all(8),
+                        itemCount: files.length,
+                        itemBuilder: (context, index) {
+                          Map<String, dynamic> file = files[index];
+                          File fileData = File(file['path']);
+                          String extension = p.extension(fileData.path);
+                          if (imageExtensions.contains(extension)) {}
+                          if (videoExtensions.contains(extension)) {}
+                          if (audioExtensions.contains(extension)) {}
+                          return const Card(
+                            child: Text('写真'),
+                          );
+                        },
+                      )
+                    : const Center(child: Text('保存されている画像がありません')),
               ),
             ],
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {},
+          onPressed: () async {
+            await _uploadFiles();
+          },
           label: const Text('画像をアップロード'),
           icon: const Icon(Icons.add_photo_alternate),
         ),
