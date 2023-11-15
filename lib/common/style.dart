@@ -47,7 +47,7 @@ const kBgDecoration = BoxDecoration(
     image: AssetImage('assets/images/background.jpg'),
     fit: BoxFit.cover,
     alignment: Alignment.centerRight,
-    opacity: 0.8,
+    opacity: 0.6,
   ),
 );
 

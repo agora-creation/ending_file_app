@@ -2,9 +2,56 @@ import 'package:ending_file_app/common/functions.dart';
 import 'package:ending_file_app/common/style.dart';
 import 'package:ending_file_app/screens/home.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screen_lock/flutter_screen_lock.dart';
 
-class TitleScreen extends StatelessWidget {
+class TitleScreen extends StatefulWidget {
   const TitleScreen({super.key});
+
+  @override
+  State<TitleScreen> createState() => _TitleScreenState();
+}
+
+class _TitleScreenState extends State<TitleScreen> {
+  Future _openPasscode() async {
+    String? passcode = await getPrefsString('passcode');
+    if (passcode != null) {
+      if (!mounted) return;
+      await screenLock(
+        context: context,
+        correctString: passcode,
+        title: const Text('画面がロックされました\nパスコードを入力してください'),
+        canCancel: false,
+        onUnlocked: () {
+          Navigator.pop(context);
+        },
+        config: const ScreenLockConfig(
+          backgroundColor: kBlackColor,
+        ),
+        keyPadConfig: KeyPadConfig(
+          buttonConfig: KeyPadButtonConfig(
+            foregroundColor: kWhiteColor,
+            buttonStyle: OutlinedButton.styleFrom(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(100),
+                ),
+              ),
+              side: const BorderSide(color: kWhiteColor),
+            ),
+          ),
+        ),
+        deleteButton: const Icon(
+          Icons.backspace,
+          color: kWhiteColor,
+        ),
+      ).then((value) {
+        pushReplacementScreen(context, const HomeScreen());
+      });
+    } else {
+      if (!mounted) return;
+      pushReplacementScreen(context, const HomeScreen());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +59,9 @@ class TitleScreen extends StatelessWidget {
       decoration: kBgDecoration,
       child: Scaffold(
         body: GestureDetector(
-          onTap: () => pushReplacementScreen(context, const HomeScreen()),
+          onTap: () async {
+            await _openPasscode();
+          },
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Center(

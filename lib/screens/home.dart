@@ -2,10 +2,16 @@ import 'dart:io';
 
 import 'package:ending_file_app/common/functions.dart';
 import 'package:ending_file_app/common/style.dart';
+import 'package:ending_file_app/screens/audio_detail.dart';
 import 'package:ending_file_app/screens/delete_setting.dart';
+import 'package:ending_file_app/screens/image_detail.dart';
+import 'package:ending_file_app/screens/video_detail.dart';
 import 'package:ending_file_app/services/sqflite.dart';
+import 'package:ending_file_app/widgets/audio_card.dart';
 import 'package:ending_file_app/widgets/custom_sm_button.dart';
 import 'package:ending_file_app/widgets/custom_text_button.dart';
+import 'package:ending_file_app/widgets/image_card.dart';
+import 'package:ending_file_app/widgets/video_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screen_lock/flutter_screen_lock.dart';
 import 'package:path/path.dart' as p;
@@ -20,41 +26,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   List<Map<String, dynamic>> files = [];
+  bool isPicked = false;
 
-  Future _init() async {
+  Future _checkPasscode() async {
     String? passcode = await getPrefsString('passcode');
-    if (passcode != null) {
-      if (!mounted) return;
-      await screenLock(
-        context: context,
-        correctString: passcode,
-        title: const Text('画面がロックされました\nパスコードを入力してください'),
-        canCancel: false,
-        onUnlocked: () {
-          Navigator.pop(context);
-        },
-        config: const ScreenLockConfig(
-          backgroundColor: kBlackColor,
-        ),
-        keyPadConfig: KeyPadConfig(
-          buttonConfig: KeyPadButtonConfig(
-            foregroundColor: kWhiteColor,
-            buttonStyle: OutlinedButton.styleFrom(
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(100),
-                ),
-              ),
-              side: const BorderSide(color: kWhiteColor),
-            ),
-          ),
-        ),
-        deleteButton: const Icon(
-          Icons.backspace,
-          color: kWhiteColor,
-        ),
-      );
-    } else {
+    if (passcode == null) {
       if (!mounted) return;
       await showDialog(
         context: context,
@@ -84,6 +60,42 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
         ),
         barrierDismissible: false,
+      );
+    }
+  }
+
+  Future _openPasscode() async {
+    String? passcode = await getPrefsString('passcode');
+    if (passcode != null && !isPicked) {
+      if (!mounted) return;
+      await screenLock(
+        context: context,
+        correctString: passcode,
+        title: const Text('画面がロックされました\nパスコードを入力してください'),
+        canCancel: false,
+        onUnlocked: () {
+          Navigator.pop(context);
+        },
+        config: const ScreenLockConfig(
+          backgroundColor: kBlackColor,
+        ),
+        keyPadConfig: KeyPadConfig(
+          buttonConfig: KeyPadButtonConfig(
+            foregroundColor: kWhiteColor,
+            buttonStyle: OutlinedButton.styleFrom(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(100),
+                ),
+              ),
+              side: const BorderSide(color: kWhiteColor),
+            ),
+          ),
+        ),
+        deleteButton: const Icon(
+          Icons.backspace,
+          color: kWhiteColor,
+        ),
       );
     }
   }
@@ -140,23 +152,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     List<AssetEntity>? result = await AssetPicker.pickAssets(context);
     if (result == null) return;
     if (result.isEmpty) return;
+    isPicked = true;
     List<String> ids = [];
     for (AssetEntity entity in result) {
       File? file = await entity.originFile;
       if (file != null) {
         await SqfLiteService.savedFile(file);
-        _getFiles();
       }
       ids.add(entity.id);
     }
     await PhotoManager.editor.deleteWithIds(ids);
+    _getFiles();
+    isPicked = false;
   }
 
   @override
   void initState() {
-    _init();
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _checkPasscode();
     _getFiles();
   }
 
@@ -177,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         break;
       case AppLifecycleState.resumed:
         print('再開されたときの処理');
-        _init();
+        _openPasscode();
         break;
       case AppLifecycleState.detached:
         print('破棄されたときの処理');
@@ -220,15 +234,37 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         padding: const EdgeInsets.all(8),
                         itemCount: files.length,
                         itemBuilder: (context, index) {
-                          Map<String, dynamic> file = files[index];
-                          File fileData = File(file['path']);
-                          String extension = p.extension(fileData.path);
-                          if (imageExtensions.contains(extension)) {}
-                          if (videoExtensions.contains(extension)) {}
-                          if (audioExtensions.contains(extension)) {}
-                          return const Card(
-                            child: Text('写真'),
-                          );
+                          Map<String, dynamic> map = files[index];
+                          File file = File(map['path']);
+                          String extension = p.extension(file.path);
+                          if (imageExtensions.contains(extension)) {
+                            return GestureDetector(
+                              onTap: () => pushScreen(
+                                context,
+                                ImageDetailScreen(map: map),
+                              ),
+                              child: ImageCard(file: file),
+                            );
+                          }
+                          if (videoExtensions.contains(extension)) {
+                            return GestureDetector(
+                              onTap: () => pushScreen(
+                                context,
+                                VideoDetailScreen(map: map),
+                              ),
+                              child: VideoCard(file: file),
+                            );
+                          }
+                          if (audioExtensions.contains(extension)) {
+                            return GestureDetector(
+                              onTap: () => pushScreen(
+                                context,
+                                AudioDetailScreen(map: map),
+                              ),
+                              child: AudioCard(file: file),
+                            );
+                          }
+                          return Container();
                         },
                       )
                     : const Center(child: Text('保存されている画像がありません')),
