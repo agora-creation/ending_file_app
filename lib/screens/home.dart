@@ -26,7 +26,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   List<Map<String, dynamic>> files = [];
-  bool isPicked = false;
 
   Future _checkPasscode() async {
     String? passcode = await getPrefsString('passcode');
@@ -66,7 +65,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future _openPasscode() async {
     String? passcode = await getPrefsString('passcode');
-    if (passcode != null && !isPicked) {
+    int? lastTime = await getPrefsInt('lastTime');
+    if (passcode != null && lastTime == null) {
       if (!mounted) return;
       await screenLock(
         context: context,
@@ -152,7 +152,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     List<AssetEntity>? result = await AssetPicker.pickAssets(context);
     if (result == null) return;
     if (result.isEmpty) return;
-    isPicked = true;
     List<String> ids = [];
     for (AssetEntity entity in result) {
       File? file = await entity.originFile;
@@ -163,13 +162,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
     await PhotoManager.editor.deleteWithIds(ids);
     _getFiles();
-    isPicked = false;
+  }
+
+  Future _saveLastTime() async {
+    int timestamp = DateTime.now().millisecondsSinceEpoch;
+    await setPrefsInt('lastTime', timestamp);
+  }
+
+  Future _removeLastTime() async {
+    await removePrefs('lastTime');
   }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _removeLastTime();
     _checkPasscode();
     _getFiles();
   }
@@ -185,16 +193,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.inactive:
         print('非アクティブになったときの処理');
+        _saveLastTime();
         break;
       case AppLifecycleState.paused:
         print('停止されたときの処理');
+        _saveLastTime();
         break;
       case AppLifecycleState.resumed:
         print('再開されたときの処理');
+        _removeLastTime();
         _openPasscode();
         break;
       case AppLifecycleState.detached:
         print('破棄されたときの処理');
+        _saveLastTime();
         break;
       default:
         break;
