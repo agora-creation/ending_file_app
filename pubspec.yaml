@@ -3,7 +3,7 @@ description: A new Flutter project.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 1.0.1+1
 
 environment:
   sdk: '>=3.1.5 <4.0.0'
@@ -53,5 +53,5 @@ flutter_icons:
   android: true
   ios: true
   image_path: 'assets/images/icon.png'
-  adaptive_icon_background: '#0e100f'
+  adaptive_icon_background: '#000000'
   adaptive_icon_foreground: 'assets/images/icon_adaptive_foreground.png'
