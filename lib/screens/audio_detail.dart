@@ -1,7 +1,10 @@
 import 'dart:io';
 
+import 'package:ending_file_app/common/functions.dart';
 import 'package:ending_file_app/common/style.dart';
+import 'package:ending_file_app/screens/home.dart';
 import 'package:ending_file_app/services/sqflite.dart';
+import 'package:ending_file_app/widgets/custom_sm_button.dart';
 import 'package:ending_file_app/widgets/custom_text_button.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -43,6 +46,8 @@ class _AudioDetailScreenState extends State<AudioDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    File file = File(widget.map['path']);
+
     return Container(
       decoration: kBgDecoration.copyWith(color: kBlackColor),
       child: Scaffold(
@@ -54,11 +59,47 @@ class _AudioDetailScreenState extends State<AudioDetailScreen> {
           ),
           actions: [
             CustomTextButton(
-              onPressed: () async {
-                await SqfLiteService.removedFile(widget.map['id']);
-                if (!mounted) return;
-                Navigator.pop(context);
-              },
+              onPressed: () => showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('本当に削除しますか？'),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          CustomSmButton(
+                            label: 'やめる',
+                            labelColor: kWhiteColor,
+                            backgroundColor: kGreyColor,
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          CustomSmButton(
+                            label: 'はい',
+                            labelColor: kWhiteColor,
+                            backgroundColor: kRedColor,
+                            onPressed: () async {
+                              await SqfLiteService.removedFile(
+                                widget.map['id'],
+                              );
+                              await file.delete();
+                              if (!mounted) return;
+                              pushReplacementScreen(
+                                context,
+                                const HomeScreen(),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                barrierDismissible: false,
+              ),
               label: '削除する',
             ),
           ],
