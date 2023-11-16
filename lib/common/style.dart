@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screen_lock/flutter_screen_lock.dart';
 
 const kWhiteColor = Color(0xFFFFFFFF);
 const kBlackColor = Color(0xFF333333);
@@ -20,6 +21,7 @@ ThemeData customTheme() {
         color: kWhiteColor,
         fontSize: 18,
         fontWeight: FontWeight.bold,
+        fontFamily: 'OradanoGSRR',
       ),
       iconTheme: IconThemeData(color: kWhiteColor),
     ),
@@ -42,6 +44,11 @@ ThemeData customTheme() {
   );
 }
 
+final kBorderDecoration = BoxDecoration(
+  border: Border.all(color: kWhiteColor),
+  borderRadius: BorderRadius.circular(8),
+);
+
 const kBgDecoration = BoxDecoration(
   image: DecorationImage(
     image: AssetImage('assets/images/background.jpg'),
@@ -51,10 +58,28 @@ const kBgDecoration = BoxDecoration(
   ),
 );
 
-const kHomeGridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
+const kGridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
   crossAxisSpacing: 4,
   mainAxisSpacing: 4,
   crossAxisCount: 3,
+);
+
+const kScreenLockConfig = ScreenLockConfig(
+  backgroundColor: kBlackColor,
+);
+
+final kKeyPadConfig = KeyPadConfig(
+  buttonConfig: KeyPadButtonConfig(
+    foregroundColor: kWhiteColor,
+    buttonStyle: OutlinedButton.styleFrom(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(
+          Radius.circular(100),
+        ),
+      ),
+      side: const BorderSide(color: kWhiteColor),
+    ),
+  ),
 );
 
 const List<String> imageExtensions = [

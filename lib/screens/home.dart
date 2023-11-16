@@ -48,9 +48,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     label: '設定する',
                     labelColor: kWhiteColor,
                     backgroundColor: kBlueColor,
-                    onPressed: () async {
+                    onPressed: () {
                       Navigator.pop(context);
-                      await _changePasscode();
+                      _changePasscode();
                     },
                   ),
                 ],
@@ -66,32 +66,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future _openPasscode() async {
     String? passcode = await getPrefsString('passcode');
     int? lastTime = await getPrefsInt('lastTime');
-    if (passcode != null && lastTime == null) {
+    if (passcode != null && lastTime != null) {
       if (!mounted) return;
       await screenLock(
         context: context,
         correctString: passcode,
-        title: const Text('画面がロックされました\nパスコードを入力してください'),
+        title: const Text('パスコードを入力してください'),
         canCancel: false,
-        onUnlocked: () {
+        onUnlocked: () async {
+          await removePrefs('lastTime');
+          if (!mounted) return;
           Navigator.pop(context);
         },
-        config: const ScreenLockConfig(
-          backgroundColor: kBlackColor,
-        ),
-        keyPadConfig: KeyPadConfig(
-          buttonConfig: KeyPadButtonConfig(
-            foregroundColor: kWhiteColor,
-            buttonStyle: OutlinedButton.styleFrom(
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(100),
-                ),
-              ),
-              side: const BorderSide(color: kWhiteColor),
-            ),
-          ),
-        ),
+        config: kScreenLockConfig,
+        keyPadConfig: kKeyPadConfig,
         deleteButton: const Icon(
           Icons.backspace,
           color: kWhiteColor,
@@ -100,33 +88,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future _changePasscode() async {
+  void _changePasscode() async {
     await screenLockCreate(
       context: context,
-      title: const Text('パスコードを再設定します\nパスコードを入力してください'),
-      confirmTitle: const Text('パスコードを再設定します\n先ほど入力したパスコードを再入力してください'),
+      title: const Text('パスコードを入力してください'),
+      confirmTitle: const Text('パスコードを再入力してください'),
       canCancel: false,
       onConfirmed: (value) async {
         await setPrefsString('passcode', value);
         if (!mounted) return;
         Navigator.pop(context);
       },
-      config: const ScreenLockConfig(
-        backgroundColor: kBlackColor,
-      ),
-      keyPadConfig: KeyPadConfig(
-        buttonConfig: KeyPadButtonConfig(
-          foregroundColor: kWhiteColor,
-          buttonStyle: OutlinedButton.styleFrom(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(
-                Radius.circular(100),
-              ),
-            ),
-            side: const BorderSide(color: kWhiteColor),
-          ),
-        ),
-      ),
+      config: kScreenLockConfig,
+      keyPadConfig: kKeyPadConfig,
       cancelButton: const Icon(
         Icons.close,
         color: kWhiteColor,
@@ -164,20 +138,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _getFiles();
   }
 
-  Future _saveLastTime() async {
+  void _saveLastTime() async {
     int timestamp = DateTime.now().millisecondsSinceEpoch;
     await setPrefsInt('lastTime', timestamp);
-  }
-
-  Future _removeLastTime() async {
-    await removePrefs('lastTime');
   }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _removeLastTime();
     _checkPasscode();
     _getFiles();
   }
@@ -191,17 +160,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
-      case AppLifecycleState.inactive:
-        print('非アクティブになったときの処理');
-        _saveLastTime();
-        break;
+      // case AppLifecycleState.inactive:
+      //   print('非アクティブになったときの処理');
+      //   _saveLastTime();
+      //   break;
       case AppLifecycleState.paused:
         print('停止されたときの処理');
         _saveLastTime();
         break;
       case AppLifecycleState.resumed:
         print('再開されたときの処理');
-        _removeLastTime();
         _openPasscode();
         break;
       case AppLifecycleState.detached:
@@ -225,9 +193,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomTextButton(
-                    onPressed: () async {
-                      await _changePasscode();
-                    },
+                    onPressed: () => _changePasscode(),
                     label: 'パスコード再設定',
                   ),
                   CustomTextButton(
@@ -242,8 +208,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Expanded(
                 child: files.isNotEmpty
                     ? GridView.builder(
-                        gridDelegate: kHomeGridDelegate,
-                        padding: const EdgeInsets.all(8),
+                        gridDelegate: kGridDelegate,
+                        padding: const EdgeInsets.only(
+                          left: 8,
+                          right: 8,
+                          bottom: 80,
+                        ),
                         itemCount: files.length,
                         itemBuilder: (context, index) {
                           Map<String, dynamic> map = files[index];

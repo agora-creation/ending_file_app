@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:ending_file_app/common/functions.dart';
 import 'package:ending_file_app/common/style.dart';
 import 'package:ending_file_app/screens/home.dart';
+import 'package:ending_file_app/services/sqflite.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screen_lock/flutter_screen_lock.dart';
 
 class TitleScreen extends StatefulWidget {
@@ -12,44 +16,106 @@ class TitleScreen extends StatefulWidget {
 }
 
 class _TitleScreenState extends State<TitleScreen> {
-  Future _openPasscode() async {
+  void _checkPasscode() async {
+    DateTime now = DateTime.now();
     String? passcode = await getPrefsString('passcode');
-    if (passcode != null) {
-      if (!mounted) return;
-      await screenLock(
-        context: context,
-        correctString: passcode,
-        title: const Text('画面がロックされました\nパスコードを入力してください'),
-        canCancel: false,
-        onUnlocked: () {
-          Navigator.pop(context);
-        },
-        config: const ScreenLockConfig(
-          backgroundColor: kBlackColor,
-        ),
-        keyPadConfig: KeyPadConfig(
-          buttonConfig: KeyPadButtonConfig(
-            foregroundColor: kWhiteColor,
-            buttonStyle: OutlinedButton.styleFrom(
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(100),
+    int? timestamp = await getPrefsInt('lastTime');
+    int? deleteDay = await getPrefsInt('deleteDay');
+    if (passcode != null && timestamp != null && deleteDay != null) {
+      DateTime lastTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      Duration diff = now.difference(lastTime);
+      int daysDiff = diff.inDays;
+      if (daysDiff >= deleteDay) {
+        if (!mounted) return;
+        await screenLock(
+          context: context,
+          correctString: passcode,
+          title: const Text('パスコードを入力してください'),
+          footer: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Container(
+              decoration: kBorderDecoration,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'アプリを閉じて、$daysDiff日が経過しました。\n緊急削除を行いますが、最終確認のため、パスコードをお聞きします。\nパスコードが一致すれば、削除は行われず、いつも通りお使いいただけます。\nパスコードが一致しなければ、アプリ内データは全て削除され、アプリは閉じます。',
+                      style: const TextStyle(color: kRedColor),
+                    ),
+                  ],
                 ),
               ),
-              side: const BorderSide(color: kWhiteColor),
             ),
           ),
-        ),
-        deleteButton: const Icon(
-          Icons.backspace,
-          color: kWhiteColor,
-        ),
-      ).then((value) {
-        pushReplacementScreen(context, const HomeScreen());
-      });
+          canCancel: false,
+          onError: (value) async {
+            await allRemovePrefs();
+            await SqfLiteService.removedFiles();
+            if (Platform.isAndroid) {
+              SystemNavigator.pop();
+            } else if (Platform.isIOS) {
+              exit(0);
+            }
+          },
+          onUnlocked: () async {
+            await removePrefs('lastTime');
+            if (!mounted) return;
+            pushReplacementScreen(context, const HomeScreen());
+          },
+          config: kScreenLockConfig,
+          keyPadConfig: kKeyPadConfig,
+          deleteButton: const Icon(
+            Icons.backspace,
+            color: kWhiteColor,
+          ),
+        );
+      } else {
+        if (!mounted) return;
+        await screenLock(
+          context: context,
+          correctString: passcode,
+          title: const Text('パスコードを入力してください'),
+          canCancel: false,
+          onUnlocked: () async {
+            await removePrefs('lastTime');
+            if (!mounted) return;
+            pushReplacementScreen(context, const HomeScreen());
+          },
+          config: kScreenLockConfig,
+          keyPadConfig: kKeyPadConfig,
+          deleteButton: const Icon(
+            Icons.backspace,
+            color: kWhiteColor,
+          ),
+        );
+      }
     } else {
-      if (!mounted) return;
-      pushReplacementScreen(context, const HomeScreen());
+      if (passcode != null) {
+        if (!mounted) return;
+        await screenLock(
+          context: context,
+          correctString: passcode,
+          title: const Text('パスコードを入力してください'),
+          canCancel: false,
+          onUnlocked: () async {
+            await removePrefs('lastTime');
+            if (!mounted) return;
+            pushReplacementScreen(context, const HomeScreen());
+          },
+          config: kScreenLockConfig,
+          keyPadConfig: kKeyPadConfig,
+          deleteButton: const Icon(
+            Icons.backspace,
+            color: kWhiteColor,
+          ),
+        );
+      } else {
+        await removePrefs('lastTime');
+        if (!mounted) return;
+        pushReplacementScreen(context, const HomeScreen());
+      }
     }
   }
 
@@ -59,9 +125,7 @@ class _TitleScreenState extends State<TitleScreen> {
       decoration: kBgDecoration,
       child: Scaffold(
         body: GestureDetector(
-          onTap: () async {
-            await _openPasscode();
-          },
+          onTap: () => _checkPasscode(),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Center(
@@ -78,10 +142,7 @@ class _TitleScreenState extends State<TitleScreen> {
                     ),
                   ),
                   Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: kWhiteColor),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    decoration: kBorderDecoration,
                     child: const Padding(
                       padding: EdgeInsets.symmetric(
                         vertical: 16,
