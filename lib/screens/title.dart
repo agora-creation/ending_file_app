@@ -4,6 +4,7 @@ import 'package:ending_file_app/common/functions.dart';
 import 'package:ending_file_app/common/style.dart';
 import 'package:ending_file_app/screens/home.dart';
 import 'package:ending_file_app/services/sqflite.dart';
+import 'package:ending_file_app/widgets/custom_sm_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screen_lock/flutter_screen_lock.dart';
@@ -17,30 +18,43 @@ class TitleScreen extends StatefulWidget {
 
 class _TitleScreenState extends State<TitleScreen> {
   void _checkPasscode() async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('アプリを閉じてから、1日が経過しました。'),
+            const SizedBox(height: 8),
+            const Text(
+                'これから緊急削除プログラムを実行しますが、最終確認のため、あなたに、このアプリに設定されているパスコードの認証を行っていただきます。'),
+            const Text('パスコードが一致すれば、緊急削除プログラムは停止され、いつも通りご利用いただけます。'),
+            const Text('パスコードが一致しなければ、緊急削除プログラムが実行されます。'),
+            const SizedBox(height: 8),
+            const Text('緊急削除プログラムが実行されると、アプリ内のデータは全て削除され、アプリは自動で閉じます。'),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CustomSmButton(
+                  label: '認証を行う',
+                  labelColor: kWhiteColor,
+                  backgroundColor: kBlueColor,
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    if (!mounted) return;
     await screenLock(
       context: context,
       correctString: '1234',
       title: const Text('パスコードを入力してください'),
-      footer: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Container(
-            decoration: kBorderDecoration,
-            child: const Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'アプリを閉じて、1日が経過しました。\n緊急削除を行いますが、最終確認のため、パスコードをお聞きします。\nパスコードが一致すれば、削除は行われず、いつも通りお使いいただけます。\nパスコードが一致しなければ、アプリ内データは全て削除され、アプリは閉じます。',
-                    style: TextStyle(color: kRedColor),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
       canCancel: false,
       onError: (value) async {
         await allRemovePrefs();
