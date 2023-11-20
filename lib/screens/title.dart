@@ -17,6 +17,54 @@ class TitleScreen extends StatefulWidget {
 
 class _TitleScreenState extends State<TitleScreen> {
   void _checkPasscode() async {
+    await screenLock(
+      context: context,
+      correctString: '1234',
+      title: const Text('パスコードを入力してください'),
+      footer: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Container(
+            decoration: kBorderDecoration,
+            child: const Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'アプリを閉じて、1日が経過しました。\n緊急削除を行いますが、最終確認のため、パスコードをお聞きします。\nパスコードが一致すれば、削除は行われず、いつも通りお使いいただけます。\nパスコードが一致しなければ、アプリ内データは全て削除され、アプリは閉じます。',
+                    style: TextStyle(color: kRedColor),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      canCancel: false,
+      onError: (value) async {
+        await allRemovePrefs();
+        await SqfLiteService.removedFiles();
+        if (Platform.isAndroid) {
+          SystemNavigator.pop();
+        } else if (Platform.isIOS) {
+          exit(0);
+        }
+      },
+      onUnlocked: () async {
+        await removePrefs('lastTime');
+        if (!mounted) return;
+        pushReplacementScreen(context, const HomeScreen());
+      },
+      config: kScreenLockConfig,
+      keyPadConfig: kKeyPadConfig,
+      deleteButton: const Icon(
+        Icons.backspace,
+        color: kWhiteColor,
+      ),
+    );
+    return;
+
     DateTime now = DateTime.now();
     String? passcode = await getPrefsString('passcode');
     int? timestamp = await getPrefsInt('lastTime');
