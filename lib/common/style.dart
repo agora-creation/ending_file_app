@@ -44,6 +44,11 @@ ThemeData customTheme() {
   );
 }
 
+const kLockErrorStyle = TextStyle(
+  color: kRedColor,
+  fontSize: 14,
+);
+
 final kBorderDecoration = BoxDecoration(
   border: Border.all(color: kWhiteColor),
   borderRadius: BorderRadius.circular(8),

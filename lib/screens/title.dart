@@ -21,6 +21,8 @@ class _TitleScreenState extends State<TitleScreen> {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: kRedColor,
+        title: const Center(child: Text('警告')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,20 +30,60 @@ class _TitleScreenState extends State<TitleScreen> {
             const Text('アプリを閉じてから、1日が経過しました。'),
             const SizedBox(height: 8),
             const Text(
-                'これから緊急削除プログラムを実行しますが、最終確認のため、あなたに、このアプリに設定されているパスコードの認証を行っていただきます。'),
+              'これから緊急削除プログラムを実行しますが、最終確認のため、あなたに、このアプリに設定されているパスコードの認証を行っていただきます。',
+            ),
             const Text('パスコードが一致すれば、緊急削除プログラムは停止され、いつも通りご利用いただけます。'),
             const Text('パスコードが一致しなければ、緊急削除プログラムが実行されます。'),
             const SizedBox(height: 8),
             const Text('緊急削除プログラムが実行されると、アプリ内のデータは全て削除され、アプリは自動で閉じます。'),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CustomSmButton(
-                  label: '認証を行う',
+                  label: 'パスコード認証を行う',
                   labelColor: kWhiteColor,
                   backgroundColor: kBlueColor,
-                  onPressed: () {},
+                  onPressed: () async {
+                    int errorCount = 0;
+                    await screenLock(
+                      context: context,
+                      correctString: '1234',
+                      title: const Column(
+                        children: [
+                          Text('パスコードを入力してください'),
+                          Text(
+                            '3回ミスすると、アプリが自動で閉じます。',
+                            style: kLockErrorStyle,
+                          )
+                        ],
+                      ),
+                      canCancel: false,
+                      onError: (value) async {
+                        errorCount++;
+                        if (errorCount == 3) {
+                          await allRemovePrefs();
+                          await SqfLiteService.removedFiles();
+                          if (Platform.isAndroid) {
+                            SystemNavigator.pop();
+                          } else if (Platform.isIOS) {
+                            exit(0);
+                          }
+                        }
+                      },
+                      onUnlocked: () async {
+                        await removePrefs('lastTime');
+                        if (!mounted) return;
+                        pushReplacementScreen(context, const HomeScreen());
+                      },
+                      config: kScreenLockConfig,
+                      keyPadConfig: kKeyPadConfig,
+                      deleteButton: const Icon(
+                        Icons.backspace,
+                        color: kWhiteColor,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -49,33 +91,6 @@ class _TitleScreenState extends State<TitleScreen> {
         ),
       ),
       barrierDismissible: false,
-    );
-    if (!mounted) return;
-    await screenLock(
-      context: context,
-      correctString: '1234',
-      title: const Text('パスコードを入力してください'),
-      canCancel: false,
-      onError: (value) async {
-        await allRemovePrefs();
-        await SqfLiteService.removedFiles();
-        if (Platform.isAndroid) {
-          SystemNavigator.pop();
-        } else if (Platform.isIOS) {
-          exit(0);
-        }
-      },
-      onUnlocked: () async {
-        await removePrefs('lastTime');
-        if (!mounted) return;
-        pushReplacementScreen(context, const HomeScreen());
-      },
-      config: kScreenLockConfig,
-      keyPadConfig: kKeyPadConfig,
-      deleteButton: const Icon(
-        Icons.backspace,
-        color: kWhiteColor,
-      ),
     );
     return;
 
