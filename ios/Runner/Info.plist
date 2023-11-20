@@ -32,7 +32,7 @@
 		<true/>
 	</dict>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>写真を本アプリ内に取り込むために、許可が必要です。</string>
+	<string>このアプリには、写真ライブラリへの読み取り及び削除操作をするためのアクセス許可が必要です。</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
