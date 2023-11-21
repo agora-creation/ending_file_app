@@ -56,14 +56,11 @@ class _DeleteSettingScreenState extends State<DeleteSettingScreen> {
               const Text(
                 'このアプリを一定期間開いていなかった場合、持ち主に何かあったとみなし、保存した画像を全て削除する機能です。',
               ),
-              const SizedBox(height: 8),
               const Text(
                 'アプリを閉じてから、何日後に削除するかをここで設定できます。',
               ),
-              const SizedBox(height: 8),
               const Text(
-                '※一定期間経った後、アプリを開いた時、必ず削除する前に、確認があります。削除をキャンセルするには、画面ロックのパスコードを入力することで、キャンセルできます。',
-                style: TextStyle(color: kRedColor),
+                '※一定期間経った後アプリを開いた際、削除プログラムを実行する前に必ず確認があります。削除をキャンセルするには、画面ロックのパスコードを入力することで、キャンセルできます。',
               ),
               const SizedBox(height: 8),
               Expanded(

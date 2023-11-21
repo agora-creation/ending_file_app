@@ -13,6 +13,7 @@ import 'package:ending_file_app/widgets/custom_text_button.dart';
 import 'package:ending_file_app/widgets/image_card.dart';
 import 'package:ending_file_app/widgets/video_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screen_lock/flutter_screen_lock.dart';
 import 'package:path/path.dart' as p;
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
@@ -34,18 +35,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
+          title: const Center(child: Text('画面のロック')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('画面ロックの設定がされていません。'),
-              const Text('画面ロックするためのパスコードを設定してください。'),
+              const Text('画面をロックする設定がされていません。'),
+              const Text('画面をロックするためのパスコードを設定してください。'),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CustomSmButton(
-                    label: '設定する',
+                    label: 'パスコードを設定する',
                     labelColor: kWhiteColor,
                     backgroundColor: kBlueColor,
                     onPressed: () {
@@ -67,12 +69,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     String? passcode = await getPrefsString('passcode');
     int? lastTime = await getPrefsInt('lastTime');
     if (passcode != null && lastTime != null) {
+      int errorCount = 0;
       if (!mounted) return;
       await screenLock(
         context: context,
         correctString: passcode,
-        title: const Text('パスコードを入力してください'),
+        title: const Column(
+          children: [
+            Text('パスコードを入力してください'),
+            Text(
+              '3回間違えると、アプリが自動で閉じます。',
+              style: kLockErrorStyle,
+            )
+          ],
+        ),
         canCancel: false,
+        onError: (value) async {
+          errorCount++;
+          if (errorCount == 3) {
+            if (Platform.isAndroid) {
+              SystemNavigator.pop();
+            } else if (Platform.isIOS) {
+              exit(0);
+            }
+          }
+        },
         onUnlocked: () async {
           await removePrefs('lastTime');
           if (!mounted) return;
@@ -160,10 +181,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
-      // case AppLifecycleState.inactive:
-      //   print('非アクティブになったときの処理');
-      //   _saveLastTime();
-      //   break;
       case AppLifecycleState.paused:
         print('停止されたときの処理');
         _saveLastTime();
@@ -249,7 +266,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           return Container();
                         },
                       )
-                    : const Center(child: Text('保存されている画像がありません')),
+                    : const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            '保存されている画像がありません。',
+                          ),
+                          Text(
+                            '右下のボタンから画像をアップロードしてください。',
+                          ),
+                        ],
+                      ),
               ),
             ],
           ),
