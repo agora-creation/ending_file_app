@@ -27,6 +27,8 @@ dependencies:
   video_thumbnail: ^0.5.3
   path_provider: ^2.1.1
   sqflite: ^2.3.0
+  url_launcher: ^6.2.1
+  in_app_review: ^2.0.8
 
 dependency_overrides:
   modal_bottom_sheet: ^3.0.0-pre

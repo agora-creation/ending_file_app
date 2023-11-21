@@ -6,6 +6,7 @@ import 'package:ending_file_app/screens/audio_detail.dart';
 import 'package:ending_file_app/screens/delete_setting.dart';
 import 'package:ending_file_app/screens/image_detail.dart';
 import 'package:ending_file_app/screens/video_detail.dart';
+import 'package:ending_file_app/services/app_review.dart';
 import 'package:ending_file_app/services/sqflite.dart';
 import 'package:ending_file_app/widgets/audio_card.dart';
 import 'package:ending_file_app/widgets/custom_sm_button.dart';
@@ -140,6 +141,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
+  Future _checkAppReview() async {
+    int uploadCount = await getPrefsInt('uploadCount') ?? 0;
+    bool appReview = await getPrefsBool('appReview') ?? false;
+    if (uploadCount == 2 && !appReview) {
+      if (!mounted) return;
+      AppReviewService.launchStoreReview(context);
+      await setPrefsBool('appReview', true);
+    }
+  }
+
   Future _uploadFiles() async {
     PermissionState ps = await AssetPicker.permissionCheck();
     if (!ps.hasAccess) return;
@@ -156,6 +167,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ids.add(entity.id);
     }
     await PhotoManager.editor.deleteWithIds(ids);
+    int uploadCount = await getPrefsInt('uploadCount') ?? 0;
+    await setPrefsInt('uploadCount', uploadCount + 1);
     _getFiles();
   }
 
@@ -170,6 +183,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _checkPasscode();
     _getFiles();
+    _checkAppReview();
   }
 
   @override
