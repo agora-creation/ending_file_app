@@ -208,7 +208,7 @@ class _TitleScreenState extends State<TitleScreen> {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.underline,
+                      fontFamily: 'ZenOldMincho-Bold',
                     ),
                   ),
                   Container(

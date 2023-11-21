@@ -47,9 +47,12 @@ flutter:
     - assets/images/
 
   fonts:
-    - family: OradanoGSRR
+    - family: ZenOldMincho-Bold
       fonts:
-        - asset: assets/fonts/OradanoGSRR.ttf
+        - asset: assets/fonts/ZenOldMincho-Bold.ttf
+    - family: ZenOldMincho-Regular
+      fonts:
+        - asset: assets/fonts/ZenOldMincho-Regular.ttf
 
 flutter_icons:
   android: true

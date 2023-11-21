@@ -11,7 +11,7 @@ const kBlueColor = Color(0xFF2196F3);
 ThemeData customTheme() {
   return ThemeData(
     scaffoldBackgroundColor: Colors.transparent,
-    fontFamily: 'OradanoGSRR',
+    fontFamily: 'ZenOldMincho-Regular',
     appBarTheme: const AppBarTheme(
       color: Colors.transparent,
       elevation: 0,
@@ -21,7 +21,7 @@ ThemeData customTheme() {
         color: kWhiteColor,
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        fontFamily: 'OradanoGSRR',
+        fontFamily: 'ZenOldMincho-Regular',
       ),
       iconTheme: IconThemeData(color: kWhiteColor),
     ),
