@@ -29,6 +29,7 @@ dependencies:
   sqflite: ^2.3.0
   url_launcher: ^6.2.1
   in_app_review: ^2.0.8
+  in_app_purchase: ^3.1.11
 
 dependency_overrides:
   modal_bottom_sheet: ^3.0.0-pre
