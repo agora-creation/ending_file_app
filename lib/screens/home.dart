@@ -12,6 +12,7 @@ import 'package:ending_file_app/widgets/audio_card.dart';
 import 'package:ending_file_app/widgets/custom_sm_button.dart';
 import 'package:ending_file_app/widgets/custom_text_button.dart';
 import 'package:ending_file_app/widgets/image_card.dart';
+import 'package:ending_file_app/widgets/purchase_list_tile.dart';
 import 'package:ending_file_app/widgets/video_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -220,6 +221,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         body: SafeArea(
           child: Column(
             children: [
+              PurchaseListTile(
+                onPressed: () {},
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

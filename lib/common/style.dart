@@ -7,6 +7,7 @@ const kBlackColor = Color(0xFF333333);
 const kGreyColor = Color(0xFF9E9E9E);
 const kRedColor = Color(0xFFF44336);
 const kBlueColor = Color(0xFF2196F3);
+const kYellowColor = Color(0xFFFFEB3B);
 
 ThemeData customTheme() {
   return ThemeData(
