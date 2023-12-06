@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:ending_file_app/common/functions.dart';
@@ -17,8 +18,35 @@ import 'package:ending_file_app/widgets/video_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screen_lock/flutter_screen_lock.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:path/path.dart' as p;
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
+
+InAppPurchase _inAppPurchase = InAppPurchase.instance;
+late StreamSubscription<dynamic> _streamSubscription;
+List<ProductDetails> _products = [];
+const _variant = {"ending_file_trial_release"};
+
+void _listenToPurchase(
+  List<PurchaseDetails> purchaseDetailsList,
+  BuildContext context,
+) {
+  purchaseDetailsList.forEach((PurchaseDetails purchaseDetails) async {
+    if (purchaseDetails.status == PurchaseStatus.pending) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Pending'),
+      ));
+    } else if (purchaseDetails.status == PurchaseStatus.error) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Error'),
+      ));
+    } else if (purchaseDetails.status == PurchaseStatus.purchased) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Purchased'),
+      ));
+    }
+  });
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -178,6 +206,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await setPrefsInt('lastTime', timestamp);
   }
 
+  void _initStore() async {
+    ProductDetailsResponse productDetailsResponse =
+        await _inAppPurchase.queryProductDetails(_variant);
+
+    if (productDetailsResponse.error == null) {
+      setState(() {});
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -185,6 +222,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _checkPasscode();
     _getFiles();
     _checkAppReview();
+
+    Stream purchaseUpdated = InAppPurchase.instance.purchaseStream;
+
+    _streamSubscription = purchaseUpdated.listen((purchaseList) {
+      _listenToPurchase(purchaseList, context);
+    }, onDone: () {
+      _streamSubscription.cancel();
+    }, onError: (error) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Error'),
+      ));
+    });
   }
 
   @override
