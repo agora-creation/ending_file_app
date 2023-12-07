@@ -211,8 +211,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         await _inAppPurchase.queryProductDetails(_variant);
 
     if (productDetailsResponse.error == null) {
-      setState(() {});
+      setState(() {
+        _products = productDetailsResponse.productDetails;
+      });
     }
+  }
+
+  void _buy() {
+    final PurchaseParam param = PurchaseParam(productDetails: _products[0]);
+    _inAppPurchase.buyConsumable(purchaseParam: param);
   }
 
   @override
@@ -234,6 +241,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         content: Text('Error'),
       ));
     });
+
+    _initStore();
   }
 
   @override
@@ -271,7 +280,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           child: Column(
             children: [
               PurchaseListTile(
-                onPressed: () {},
+                onPressed: () {
+                  _buy();
+                },
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
